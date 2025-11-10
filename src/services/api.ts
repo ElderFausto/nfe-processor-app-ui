@@ -25,3 +25,7 @@ export const uploadNfe = (file: File) => {
     },
   });
 };
+
+export const getAllNfes = () => {
+  return apiClient.get('/Nfe');
+};

@@ -54,7 +54,7 @@ defineExpose({ fetchData });
 </script>
 
 <template>
-  <div class="mt-12">
+  <div class="mt-12 mx-auto overflow-x-scroll">
     <h2 class="text-2xl font-semibold text-gray-700 mb-4">Notas Processadas</h2>
 
     <div v-if="isLoading" class="text-center p-4 text-gray-500">

@@ -2,14 +2,15 @@
 import { ref } from 'vue';
 import { uploadNfe } from './services/api';
 import NfeDashboard from './components/NfeDashboard.vue';
+import StatsCards from './components/StatsCards.vue';
 
 const selectedFile = ref<File | null>(null);
 const isLoading = ref(false);
 const errorMessage = ref<string | null>(null);
 const successMessage = ref<string | null>(null);
 
-// Permite chamar a função 'fetchData' de dentro dele
 const dashboard = ref<InstanceType<typeof NfeDashboard> | null>(null);
+const statsCards = ref<InstanceType<typeof StatsCards> | null>(null);
 
 const onFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement;
@@ -34,15 +35,15 @@ const handleSubmit = async () => {
     const response = await uploadNfe(selectedFile.value);
     successMessage.value = `Nota Fiscal ${response.data.number} processada com sucesso!`;
 
-    // Chama a função 'fetchData' do dashboard para atualizar a tabela
+    // Atualiza ambos os componentes
     dashboard.value?.fetchData();
+    statsCards.value?.fetchData();
 
   } catch (error: any) {
     console.error(error);
     errorMessage.value = error.response?.data || 'Erro ao processar o arquivo.';
   } finally {
     isLoading.value = false;
-    // Limpa a seleção de arquivo após o envio
     (document.getElementById('file-upload') as HTMLInputElement).value = '';
     selectedFile.value = null;
   }
@@ -51,7 +52,7 @@ const handleSubmit = async () => {
 
 <template>
   <div class="min-h-screen bg-gray-100 p-8">
-    <div class="max-w-4xl mx-auto">
+    <div class="max-w-7xl mx-auto space-y-8">
 
       <div class="w-full p-8 space-y-6 bg-white rounded-lg shadow-lg">
         <h1 class="text-3xl font-bold text-center text-gray-800">
@@ -93,8 +94,9 @@ const handleSubmit = async () => {
         <div v-if="errorMessage" class="p-3 text-red-800 bg-red-100 rounded-md">
           {{ errorMessage }}
         </div>
-
       </div>
+
+      <StatsCards ref="statsCards" />
 
       <NfeDashboard ref="dashboard" />
 

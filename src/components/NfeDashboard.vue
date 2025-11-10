@@ -1,10 +1,12 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue';
-import { getAllNfes } from '../services/api';
+import { ref, onMounted } from "vue";
+import { getAllNfes } from "../services/api";
+import NfeDetailModal from "./NfeDetailModal.vue"; // 1. IMPORTE O NOVO MODAL
 
 // Tipos para os dados (para o TypeScript)
 interface NfeProduct {
   id: number;
+  productCode: string; // Corrigido para corresponder ao modelo
   name: string;
   quantity: number;
   totalValue: number;
@@ -16,6 +18,8 @@ interface Nfe {
   issuerName: string;
   recipientName: string;
   totalValue: number;
+  icmsValue: number; // Adicionando para o modal
+  ipiValue: number; // Adicionando para o modal
   products: NfeProduct[];
 }
 
@@ -23,6 +27,9 @@ interface Nfe {
 const nfes = ref<Nfe[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
+
+// 2. NOVO ESTADO para controlar o modal
+const selectedNfe = ref<Nfe | null>(null);
 
 // Função para buscar os dados
 const fetchData = async () => {
@@ -32,14 +39,14 @@ const fetchData = async () => {
     const response = await getAllNfes();
     nfes.value = response.data;
   } catch (err) {
-    error.value = 'Falha ao buscar as notas fiscais.';
+    error.value = "Falha ao buscar as notas fiscais.";
     console.error(err);
   } finally {
     isLoading.value = false;
   }
 };
 
-// Hook 'onMounted' (executa quando o componente é criado)
+// Hook 'onMounted'
 onMounted(fetchData);
 
 // Exporta a função para que o App.vue possa chamá-la
@@ -50,31 +57,78 @@ defineExpose({ fetchData });
   <div class="mt-12">
     <h2 class="text-2xl font-semibold text-gray-700 mb-4">Notas Processadas</h2>
 
-    <div v-if="isLoading" class="text-center p-4 text-gray-500">Carregando notas...</div>
-    <div v-if="error" class="p-3 text-red-800 bg-red-100 rounded-md">{{ error }}</div>
+    <div v-if="isLoading" class="text-center p-4 text-gray-500">
+      Carregando notas...
+    </div>
+    <div v-if="error" class="p-3 text-red-800 bg-red-100 rounded-md">
+      {{ error }}
+    </div>
 
-    <div v-if="!isLoading && !error" class="overflow-x-auto shadow-md rounded-lg">
+    <div v-if="!isLoading && !error" class="shadow-md rounded-lg">
       <table class="min-w-full divide-y divide-gray-200 bg-white">
         <thead class="bg-gray-800 text-white">
           <tr>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Número</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Emitente</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Destinatário</th>
-            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">Valor Total</th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            >
+              Número
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            >
+              Emitente
+            </th>
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
+            >
+              Destinatário
+            </th>
+
+            <th
+              scope="col"
+              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
+            >
+              Valor Total
+            </th>
           </tr>
         </thead>
         <tbody class="divide-y divide-gray-200">
           <tr v-if="nfes.length === 0">
-            <td colspan="4" class="px-6 py-4 text-center text-gray-500">Nenhuma nota fiscal processada ainda.</td>
+            <td colspan="4" class="px-6 py-4 text-center text-gray-500">
+              Nenhuma nota fiscal processada ainda.
+            </td>
           </tr>
-          <tr v-for="nfe in nfes" :key="nfe.accessKey" class="hover:bg-gray-50">
+
+          <tr
+            v-for="nfe in nfes"
+            :key="nfe.accessKey"
+            @click="selectedNfe = nfe"
+            class="hover:bg-gray-100 cursor-pointer"
+          >
             <td class="px-6 py-4 whitespace-nowrap">{{ nfe.number }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ nfe.issuerName }}</td>
             <td class="px-6 py-4 whitespace-nowrap">{{ nfe.recipientName }}</td>
-            <td class="px-6 py-4 whitespace-nowrap">{{ nfe.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</td>
+
+            <td class="px-6 py-4 whitespace-nowrap">
+              {{
+                nfe.totalValue.toLocaleString("pt-BR", {
+                  style: "currency",
+                  currency: "BRL",
+                })
+              }}
+            </td>
           </tr>
         </tbody>
       </table>
     </div>
   </div>
+
+  <NfeDetailModal
+    v-if="selectedNfe"
+    :nfe="selectedNfe"
+    @close="selectedNfe = null"
+  />
 </template>

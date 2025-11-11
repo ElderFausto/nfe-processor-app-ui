@@ -33,3 +33,7 @@ export const getAllNfes = () => {
 export const getNfeStats = () => {
   return apiClient.get('/Nfe/stats');
 };
+
+export const deleteNfe = (accessKey: string) => {
+  return apiClient.delete(`/Nfe/${accessKey}`);
+};

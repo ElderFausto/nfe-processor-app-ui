@@ -12,13 +12,18 @@ const successMessage = ref<string | null>(null);
 const dashboard = ref<InstanceType<typeof NfeDashboard> | null>(null);
 const statsCards = ref<InstanceType<typeof StatsCards> | null>(null);
 
+// Esta é a sua função central de atualização
+const refreshData = () => {
+  dashboard.value?.fetchData();
+  statsCards.value?.fetchData();
+};
+
 const onFileSelect = (event: Event) => {
   const target = event.target as HTMLInputElement;
-  if (target.files) {
-    selectedFile.value = target.files[0];
-    errorMessage.value = null;
-    successMessage.value = null;
-  }
+  const file = target.files && target.files.length > 0 ? target.files[0] : null;
+  selectedFile.value = file;
+  errorMessage.value = null;
+  successMessage.value = null;
 };
 
 const handleSubmit = async () => {
@@ -36,8 +41,7 @@ const handleSubmit = async () => {
     successMessage.value = `Nota Fiscal ${response.data.number} processada com sucesso!`;
 
     // Atualiza ambos os componentes
-    dashboard.value?.fetchData();
-    statsCards.value?.fetchData();
+    refreshData(); // Chamando a função central
 
   } catch (error: any) {
     console.error(error);
@@ -79,7 +83,6 @@ const handleSubmit = async () => {
             </span>
             <input id="file-upload" name="file-upload" type="file" class="sr-only" @change="onFileSelect" accept=".xml, text/xml">
           </label>
-
           <button 
             @click="handleSubmit" 
             :disabled="isLoading || !selectedFile" 
@@ -87,7 +90,6 @@ const handleSubmit = async () => {
             {{ isLoading ? 'Processando...' : 'Enviar e Processar NF-e' }}
           </button>
         </div>
-
         <div v-if="successMessage" class="p-3 text-green-800 bg-green-100 rounded-md">
           {{ successMessage }}
         </div>
@@ -98,7 +100,7 @@ const handleSubmit = async () => {
 
       <StatsCards ref="statsCards" />
 
-      <NfeDashboard ref="dashboard" />
+      <NfeDashboard ref="dashboard" @refreshData="refreshData" />
 
     </div>
   </div>

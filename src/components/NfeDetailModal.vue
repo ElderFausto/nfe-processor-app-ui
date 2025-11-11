@@ -1,15 +1,32 @@
 <script setup lang="ts">
-// Define os 'props' (propriedades) que este componente espera receber
+type Product = {
+  id: string;
+  productCode: string;
+  name: string;
+  quantity: number;
+  totalValue: number;
+};
+
+type Nfe = {
+  number: string;
+  issuerName: string;
+  issuerCNPJ: string;
+  recipientName: string;
+  recipientCNPJ: string;
+  totalValue: number;
+  icmsValue: number;
+  ipiValue: number;
+  issueDate: string;
+  products: Product[];
+};
+
 // Ele espera um objeto 'nfe' e uma função 'onClose'
 defineProps<{
-  nfe: Nfe; // Estamos re-usando a interface definida no NfeDashboard
+  nfe: Nfe; // Reusa a interface definida no NfeDashboard
   onClose: () => void;
 }>();
 
-// Define os 'emits' (eventos) que este componente pode disparar
-// (Embora estejamos usando a prop 'onClose' para simplificar)
-
-// Formata a data para um padrão mais legível
+// Formata a data para exibição
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('pt-BR');
 };

@@ -37,3 +37,9 @@ export const getNfeStats = () => {
 export const deleteNfe = (accessKey: string) => {
   return apiClient.delete(`/Nfe/${accessKey}`);
 };
+
+export const exportNfes = () => {
+  return apiClient.get('/Nfe/export', {
+    responseType: 'blob', // MUITO IMPORTANTE: Diz ao Axios para esperar um arquivo
+  });
+};

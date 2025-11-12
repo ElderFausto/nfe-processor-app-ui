@@ -3,7 +3,6 @@ import { ref, onMounted } from "vue";
 import { getAllNfes, deleteNfe, exportNfes } from "../services/api";
 import NfeDetailModal from "./NfeDetailModal.vue";
 
-// Interface Nfe aqui para reutilização
 interface NfeProduct {
   id: number;
   productCode: string;
@@ -16,23 +15,24 @@ interface Nfe {
   number: number;
   issueDate: string;
   issuerName: string;
+  issuerCNPJ: string;
   recipientName: string;
+  recipientCNPJ: string;
   totalValue: number;
   icmsValue: number;
   ipiValue: number;
   products: NfeProduct[];
-  natureOfOperation: string;
+  natureOfOperation: string; 
 }
 
 // Estado reativo
 const nfes = ref<Nfe[]>([]);
 const isLoading = ref(true);
 const error = ref<string | null>(null);
-
 const selectedNfe = ref<Nfe | null>(null);
 
 // Emite evento para o componente pai
-const emit = defineEmits(["refreshData"]);
+const emit = defineEmits(['refreshData']);
 
 // Função para buscar os dados
 const fetchData = async () => {
@@ -49,70 +49,63 @@ const fetchData = async () => {
   }
 };
 
+// Função de exclusão
 const handleDelete = async (accessKey: string, nfeNumber: number) => {
-  // Pede confirmação do usuário
   if (!confirm(`Tem certeza que deseja excluir a NF-e número ${nfeNumber}?`)) {
     return;
   }
-
-  error.value = null; // Limpa erros antigos
-
+  error.value = null; 
   try {
     await deleteNfe(accessKey);
-    // Recarrega os dados após exclusão
-    emit("refreshData");
+    emit('refreshData');
   } catch (err) {
     console.error("Falha ao excluir a NF-e:", err);
-    error.value = "Falha ao excluir a nota fiscal.";
+    error.value = 'Falha ao excluir a nota fiscal.';
   }
 };
 
 const handleExport = async () => {
+  error.value = null;
   try {
     const response = await exportNfes();
-
+    
     // Cria um objeto URL temporário para o 'blob' (o arquivo Excel)
     const url = window.URL.createObjectURL(new Blob([response.data]));
-
-    // Cria um link <a> invisível
-    const link = document.createElement("a");
+    const link = document.createElement('a');
     link.href = url;
-
-    // Pega o nome do arquivo do cabeçalho da resposta (opcional, mas bom)
-    const contentDisposition = response.headers["content-disposition"];
-    let fileName = "export.xlsx";
+    
+    // Tenta pegar o nome do arquivo do cabeçalho da resposta
+    const contentDisposition = response.headers['content-disposition'];
+    let fileName = 'NotasFiscais.xlsx';
     if (contentDisposition) {
       const fileNameMatch = contentDisposition.match(/filename="?(.+)"?/);
       if (fileNameMatch && fileNameMatch.length === 2) {
         fileName = fileNameMatch[1];
       }
     }
-
-    link.setAttribute("download", fileName);
-
+    
+    link.setAttribute('download', fileName);
+    
     // Adiciona, clica e remove o link
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
     window.URL.revokeObjectURL(url);
+
   } catch (err) {
     console.error("Falha ao exportar:", err);
-    error.value = "Falha ao gerar o arquivo Excel.";
+    error.value = 'Falha ao gerar o arquivo Excel.';
   }
 };
 
-// Busca os dados ao montar o componente
 onMounted(fetchData);
-
-// Torna a função fetchData acessível para o componente pai
 defineExpose({ fetchData });
 </script>
 
 <template>
-  <div class="mt-12 mx-auto overflow-x-auto">
+  <div class="mt-12 mx-auto"> 
     <div class="flex justify-between items-center mb-4">
       <h2 class="text-2xl font-semibold text-gray-700">Notas Processadas</h2>
-
       <button
         @click="handleExport"
         class="px-4 py-2 bg-green-600 text-white rounded-md text-sm font-medium hover:bg-green-700 flex items-center"
@@ -129,41 +122,23 @@ defineExpose({ fetchData });
       {{ error }}
     </div>
 
-    <div
-      v-if="!isLoading && !error"
-      class="shadow-md rounded-lg overflow-x-auto"
-    >
+    <div v-if="!isLoading && !error" class="shadow-md rounded-lg overflow-x-auto">
       <table class="min-w-full divide-y divide-gray-200 bg-white">
         <thead class="bg-gray-800 text-white">
           <tr>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Número
             </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Emitente
             </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider">
               Destinatário
             </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap"
-            >
+            <th scope="col" class="px-6 py-3 text-left text-xs font-medium uppercase tracking-wider whitespace-nowrap">
               Valor Total
             </th>
-            <th
-              scope="col"
-              class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider"
-            >
+            <th scope="col" class="px-6 py-3 text-right text-xs font-medium uppercase tracking-wider">
               Ações
             </th>
           </tr>
@@ -180,28 +155,10 @@ defineExpose({ fetchData });
             :key="nfe.accessKey"
             class="hover:bg-gray-100"
           >
-            <td
-              @click="selectedNfe = nfe"
-              class="px-6 py-4 whitespace-nowrap cursor-pointer"
-            >
-              {{ nfe.number }}
-            </td>
-            <td
-              @click="selectedNfe = nfe"
-              class="px-6 py-4 whitespace-nowrap cursor-pointer"
-            >
-              {{ nfe.issuerName }}
-            </td>
-            <td
-              @click="selectedNfe = nfe"
-              class="px-6 py-4 whitespace-nowrap cursor-pointer"
-            >
-              {{ nfe.recipientName }}
-            </td>
-            <td
-              @click="selectedNfe = nfe"
-              class="px-6 py-4 whitespace-nowrap cursor-pointer"
-            >
+            <td @click="selectedNfe = nfe" class="px-6 py-4 whitespace-nowrap cursor-pointer">{{ nfe.number }}</td>
+            <td @click="selectedNfe = nfe" class="px-6 py-4 whitespace-nowrap cursor-pointer">{{ nfe.issuerName }}</td>
+            <td @click="selectedNfe = nfe" class="px-6 py-4 whitespace-nowrap cursor-pointer">{{ nfe.recipientName }}</td>
+            <td @click="selectedNfe = nfe" class="px-6 py-4 whitespace-nowrap cursor-pointer">
               {{
                 nfe.totalValue.toLocaleString("pt-BR", {
                   style: "currency",
@@ -209,9 +166,7 @@ defineExpose({ fetchData });
                 })
               }}
             </td>
-            <td
-              class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium"
-            >
+            <td class="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
               <button
                 @click.stop="handleDelete(nfe.accessKey, nfe.number)"
                 class="text-gray-500 hover:text-red-600"

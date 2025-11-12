@@ -1,37 +1,36 @@
 <script setup lang="ts">
-type Product = {
-  id: string;
+
+interface NfeProduct {
+  id: number;
   productCode: string;
   name: string;
   quantity: number;
   totalValue: number;
-};
-
-type Nfe = {
-  number: string;
+}
+interface Nfe {
+  recipientCNPJ: any;
+  issuerCNPJ: any;
+  accessKey: string;
+  number: number;
+  issueDate: string;
   issuerName: string;
-  issuerCNPJ: string;
   recipientName: string;
-  recipientCNPJ: string;
   totalValue: number;
   icmsValue: number;
   ipiValue: number;
-  issueDate: string;
-  products: Product[];
-};
+  products: NfeProduct[];
+  natureOfOperation: string;
+}
 
-// Ele espera um objeto 'nfe' e uma função 'onClose'
 defineProps<{
-  nfe: Nfe; // Reusa a interface definida no NfeDashboard
+  nfe: Nfe;
   onClose: () => void;
 }>();
 
-// Formata a data para exibição
 const formatDate = (dateString: string) => {
   return new Date(dateString).toLocaleString('pt-BR');
 };
 
-// Formata valores monetários
 const formatCurrency = (value: number) => {
   return value.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
 };
@@ -47,7 +46,6 @@ const formatCurrency = (value: number) => {
 
       <div class="flex justify-between items-center p-4 border-b">
         <h3 class="text-2xl font-semibold text-gray-800">Detalhes da NF-e: {{ nfe.number }}</h3>
-        
         <button 
           @click="onClose" 
           class="w-7 h-7 flex items-center justify-center rounded-full border border-red-500 text-red-500 hover:bg-red-500 hover:text-white transition-colors focus:outline-none"
@@ -57,6 +55,12 @@ const formatCurrency = (value: number) => {
       </div>
 
       <div class="p-6 space-y-4">
+        
+        <div class="bg-gray-50 p-3 rounded-md">
+          <h4 class="font-bold text-gray-700">Natureza da Operação</h4>
+          <p>{{ nfe.natureOfOperation }}</p>
+        </div>
+
         <div class="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
           <div class="bg-gray-50 p-3 rounded-md">
             <h4 class="font-bold text-gray-700">Emitente</h4>
@@ -83,7 +87,7 @@ const formatCurrency = (value: number) => {
             <h4 class="font-bold text-red-800">IPI</h4>
             <p class="text-lg">{{ formatCurrency(nfe.ipiValue) }}</p>
           </div>
-          <div class="bg-gray-50 p-3 rounded-md">
+           <div class="bg-gray-50 p-3 rounded-md">
             <h4 class="font-bold text-gray-700">Data de Emissão</h4>
             <p class="text-lg">{{ formatDate(nfe.issueDate) }}</p>
           </div>
@@ -106,7 +110,7 @@ const formatCurrency = (value: number) => {
                   <td class="px-4 py-2 whitespace-nowrap">{{ product.productCode }}</td>
                   <td class="px-4 py-2 whitespace-nowrap">{{ product.name }}</td>
                   <td class="px-4 py-2 text-center">{{ product.quantity }}</td>
-                  <td class="px-4 py-2 text-right">{{ formatCurrency(product.totalValue) }}</td>
+                  <td class="px-4 py-2 text-right">{{ product.totalValue.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' }) }}</td>
                 </tr>
               </tbody>
             </table>
